@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator leasingu — Porsche</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0e0e0f; --surface: #161618; --surface2: #1e1e21;
+  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+  --gold: #c9a84c; --gold2: #e8c97a; --gold-dim: rgba(201,168,76,0.12);
+  --text: #f0ede8; --text2: #9c9890; --text3: #5e5c58;
+  --text-netto: #7ab8f5; --green: #4caf7d; --green-dim: rgba(76,175,125,0.12);
+  --accent: var(--gold); --accent2: var(--gold2); --accent-dim: var(--gold-dim);
+  --radius: 10px; --radius-lg: 16px;
+}
+html { font-size: 16px; }
+body { background: var(--bg); color: var(--text); font-family: 'Outfit',sans-serif; font-weight: 300; min-height: 100vh; line-height: 1.6; }
+body::before { content:''; position:fixed; inset:0; background-image: linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+.app { position:relative; z-index:1; max-width:1060px; margin:0 auto; padding:32px 20px 80px; }
+
+/* Header */
+header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:24px; padding-bottom:18px; border-bottom:0.5px solid var(--border2); flex-wrap:wrap; gap:12px; }
+.brand-eye { font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); font-family:'DM Mono',monospace; margin-bottom:4px; }
+h1 { font-family:'DM Serif Display',serif; font-size:24px; font-weight:400; line-height:1.2; }
+h1 em { font-style:italic; color:var(--accent2); }
+.wibor-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(201,168,76,0.1); border:0.5px solid rgba(201,168,76,0.3); border-radius:20px; padding:4px 12px; font-size:11px; font-family:'DM Mono',monospace; color:var(--gold2); }
+.wibor-dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.header-note { font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; margin-top:4px; text-align:right; }
+
+/* Brand tabs */
+.brand-tabs { display:flex; gap:8px; margin-bottom:16px; }
+.brand-tab { padding:8px 22px; border-radius:8px; border:0.5px solid var(--border2); background:var(--surface2); cursor:pointer; font-size:13px; font-weight:500; color:var(--text2); transition:all 0.15s; font-family:'Outfit',sans-serif; }
+.brand-tab.porsche.active { border-color:var(--gold); background:var(--gold-dim); color:var(--gold2); }
+
+
+/* Cat tabs */
+.cat-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.cat-tab { padding:4px 13px; border-radius:6px; border:0.5px solid var(--border); background:transparent; cursor:pointer; font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; transition:all 0.15s; }
+.cat-tab:hover { color:var(--text2); border-color:var(--border2); }
+.cat-tab.active { border-color:var(--accent); color:var(--accent2); background:var(--accent-dim); }
+
+/* Model grid */
+.model-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:6px; margin-bottom:20px; }
+.model-btn { background:var(--surface2); border:0.5px solid var(--border); border-radius:var(--radius); padding:8px 7px; cursor:pointer; transition:all 0.15s; text-align:center; }
+.model-btn:hover { border-color:var(--border2); background:#222225; }
+.model-btn.active { border-color:var(--accent); background:var(--accent-dim); }
+.model-btn .mn { font-size:11px; font-weight:500; color:var(--text); display:block; line-height:1.3; }
+.model-btn.active .mn { color:var(--accent2); }
+.model-btn .mp { font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; margin-top:2px; display:block; }
+.model-btn.active .mp { color:var(--accent); }
+
+/* Layout */
+.layout { display:grid; grid-template-columns:1fr 370px; gap:18px; align-items:start; }
+.panel { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-lg); padding:20px; }
+.panel-title { font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--text3); font-family:'DM Mono',monospace; margin-bottom:12px; }
+
+/* Sliders */
+.slider-block { margin-bottom:16px; }
+.slider-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; flex-wrap:wrap; gap:4px; }
+.slider-label { font-size:12px; color:var(--text2); }
+.slider-value-wrap { display:flex; gap:5px; align-items:baseline; flex-wrap:wrap; justify-content:flex-end; }
+.sv-brutto { font-family:'DM Mono',monospace; font-size:12px; color:var(--accent2); font-weight:500; }
+.sv-netto { font-family:'DM Mono',monospace; font-size:10px; color:var(--text-netto); }
+.sv-plain { font-family:'DM Mono',monospace; font-size:12px; color:var(--accent2); font-weight:500; }
+input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:2px; background:var(--border2); border-radius:2px; outline:none; cursor:pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); cursor:pointer; transition:transform 0.1s; }
+input[type=range]::-webkit-slider-thumb:hover { transform:scale(1.25); }
+input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); cursor:pointer; }
+.slider-track-labels { display:flex; justify-content:space-between; margin-top:4px; }
+.slider-track-labels span { font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; }
+.warning { font-size:10px; color:#f87171; font-family:'DM Mono',monospace; margin-top:4px; min-height:14px; }
+.divider { border:none; border-top:0.5px solid var(--border); margin:16px 0; }
+.hint { font-size:10px; color:var(--text3); font-family:'DM Mono',monospace; margin-top:3px; }
+
+/* VAT toggle */
+.vat-row { display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.vat-label { font-size:12px; color:var(--text2); flex-shrink:0; }
+.vat-opts { display:flex; gap:6px; }
+.vat-btn { padding:4px 12px; border-radius:6px; border:0.5px solid var(--border2); background:var(--surface2); cursor:pointer; font-size:11px; color:var(--text3); font-family:'DM Mono',monospace; transition:all 0.15s; }
+.vat-btn.active { border-color:var(--green); background:rgba(76,175,125,0.12); color:#6ed49a; }
+
+/* Legend */
+.legend { display:flex; gap:14px; margin-bottom:16px; font-size:11px; font-family:'DM Mono',monospace; flex-wrap:wrap; }
+.legend-item { display:flex; align-items:center; gap:5px; }
+.legend-dot { width:7px; height:7px; border-radius:2px; }
+.legend-dot.brutto { background:var(--accent); }
+.legend-dot.netto { background:var(--text-netto); }
+.legend-label { color:var(--text3); }
+
+/* Results */
+.results { display:flex; flex-direction:column; gap:9px; }
+.result-card { background:var(--surface2); border:0.5px solid var(--border); border-radius:var(--radius); padding:13px 15px; }
+.result-card.main { background:var(--accent-dim); border-color:rgba(201,168,76,0.3); }
+.result-card.total { background:var(--green-dim); border-color:rgba(76,175,125,0.25); }
+
+.result-card.subtotal { background: rgba(201,168,76,0.06); border-color: rgba(201,168,76,0.18); }
+.result-card.subtotal .rc-label { color: var(--gold); }
+.result-card.subtotal .rc-brutto { color: var(--gold2); font-size: 18px; }
+
+.result-card.vat-saving { background:rgba(76,175,125,0.08); border-color:rgba(76,175,125,0.2); }
+.rc-label { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--text3); font-family:'DM Mono',monospace; margin-bottom:4px; }
+.result-card.main .rc-label { color:var(--accent); }
+.result-card.total .rc-label { color:var(--green); }
+.result-card.vat-saving .rc-label { color:#4caf7d; }
+.rc-big { display:flex; flex-direction:column; gap:1px; }
+.rc-brutto { font-family:'DM Mono',monospace; font-size:22px; font-weight:500; color:var(--accent2); }
+.result-card.total .rc-brutto { color:#6ed49a; font-size:20px; }
+.result-card.vat-saving .rc-brutto { color:#6ed49a; font-size:18px; }
+.rc-netto-line { font-family:'DM Mono',monospace; font-size:11px; color:var(--text-netto); }
+.result-row { display:flex; justify-content:space-between; align-items:flex-end; padding:6px 0; border-bottom:0.5px solid var(--border); gap:8px; }
+.result-row:last-child { border-bottom:none; }
+.rr-label { font-size:11px; color:var(--text2); flex-shrink:0; }
+.rr-values { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+.rr-brutto { font-size:12px; font-weight:500; color:var(--text); font-family:'DM Mono',monospace; }
+.rr-netto { font-size:10px; color:var(--text-netto); font-family:'DM Mono',monospace; }
+.rr-green { font-size:10px; color:#6ed49a; font-family:'DM Mono',monospace; }
+
+/* Bars */
+.bars { margin-top:2px; }
+.bar-row { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+.bar-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.bar-name { font-size:11px; color:var(--text2); min-width:76px; }
+.bar-track { flex:1; height:3px; background:var(--surface2); border-radius:2px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:2px; transition:width 0.3s cubic-bezier(.4,0,.2,1); }
+.bar-amounts { display:flex; flex-direction:column; align-items:flex-end; min-width:108px; }
+.bar-brutto { font-size:11px; font-family:'DM Mono',monospace; color:var(--text2); }
+.bar-netto { font-size:10px; font-family:'DM Mono',monospace; color:var(--text-netto); }
+.bar-total-line { display:flex; justify-content:space-between; align-items:flex-end; padding-top:8px; border-top:0.5px solid var(--border2); margin-top:2px; }
+.btl { font-size:11px; color:var(--text2); font-weight:500; }
+.btv-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
+.btv-brutto { font-size:12px; font-family:'DM Mono',monospace; color:var(--accent2); font-weight:500; }
+.btv-netto { font-size:10px; font-family:'DM Mono',monospace; color:var(--text-netto); }
+
+.footnote { margin-top:24px; font-size:10px; color:var(--text3); line-height:1.7; padding-top:14px; border-top:0.5px solid var(--border); font-family:'DM Mono',monospace; max-width:720px; }
+
+@media(max-width:820px){
+  .layout{grid-template-columns:1fr;}
+  .model-grid{grid-template-columns:repeat(2,1fr);}
+  h1{font-size:20px;}
+  header{flex-direction:column;align-items:flex-start;}
+  .header-note{text-align:left;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div>
+    <div class="brand-eye">Kalkulator leasingu operacyjnego</div>
+    <h1><em>Porsche</em> — Kalkulator leasingu 2026</h1>
+  </div>
+  <div>
+    <div class="wibor-badge"><div class="wibor-dot"></div>WIBOR 1M: <span id="wibor-val">…</span> · <span id="wibor-date">…</span></div>
+    <div class="header-note">Ceny katalogowe brutto (VAT 23%)<br>Dane aktualne na: <span id="data-updated">…</span></div>
+  </div>
+</header>
+
+
+<div id="loading-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:12px;">⟳ Ładowanie aktualnych danych…</div>
+<div class="cat-tabs" id="cat-tabs"></div>
+<div class="model-grid" id="models"></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot brutto"></div><span class="legend-label">brutto (z VAT 23%)</span></div>
+  <div class="legend-item"><div class="legend-dot netto"></div><span class="legend-label">(netto bez VAT)</span></div>
+</div>
+
+<div class="layout">
+<div>
+<div class="panel">
+  <div class="panel-title">Parametry finansowania</div>
+
+  <div class="slider-block">
+    <div class="slider-header">
+      <span class="slider-label">Cena katalogowa</span>
+      <div class="slider-value-wrap"><span class="sv-brutto" id="v-price-b"></span><span class="sv-netto" id="v-price-n"></span></div>
+    </div>
+    <input type="range" id="price" min="100000" max="1500000" value="681000" step="1000">
+    <div class="slider-track-labels"><span id="price-min-lbl"></span><span id="price-max-lbl"></span></div>
+  </div>
+
+  <div class="slider-block">
+    <div class="slider-header">
+      <span class="slider-label">Wpłata własna (brutto)</span>
+      <div class="slider-value-wrap"><span class="sv-brutto" id="v-dep-b"></span><span class="sv-netto" id="v-dep-n"></span></div>
+    </div>
+    <input type="range" id="deposit" min="0" max="1000000" value="136000" step="1000">
+    <div class="slider-track-labels"><span>0 zł</span><span>1 000 tys.</span></div>
+    <div class="warning" id="warn"></div>
+  </div>
+
+  <div class="slider-block">
+    <div class="slider-header">
+      <span class="slider-label">Okres leasingu</span>
+      <span class="sv-plain" id="v-months"></span>
+    </div>
+    <input type="range" id="months" min="24" max="60" value="36" step="12">
+    <div class="slider-track-labels"><span>24 mies.</span><span>60 mies.</span></div>
+  </div>
+
+  <div class="slider-block">
+    <div class="slider-header">
+      <span class="slider-label">Wykup końcowy (% ceny netto)</span>
+      <div class="slider-value-wrap"><span class="sv-brutto" id="v-buyout-b"></span><span class="sv-netto" id="v-buyout-n"></span></div>
+    </div>
+    <input type="range" id="buyout" min="1" max="70" value="30" step="1">
+    <div class="slider-track-labels"><span>1%</span><span>70%</span></div>
+  </div>
+
+  <div class="slider-block">
+    <div class="slider-header">
+      <span class="slider-label">Stopa finansowania (rocznie)</span>
+      <span class="sv-plain" id="v-rate"></span>
+    </div>
+    <input type="range" id="rate" min="3.0" max="10.0" value="5.5" step="0.1">
+    <div class="slider-track-labels"><span>3,0%</span><span>10,0%</span></div>
+    <div class="hint">WIBOR 1M 3,81% + marża ~1,7% → sugerowane 5,5%</div>
+  </div>
+
+  <hr class="divider">
+
+  <div class="panel-title">Odliczenie VAT</div>
+  <div class="vat-row">
+    <span class="vat-label">Odliczenie VAT od rat i wpłaty:</span>
+    <div class="vat-opts">
+      <button class="vat-btn" id="vat0" onclick="setVat(0)">Brak</button>
+      <button class="vat-btn active" id="vat50" onclick="setVat(50)">50%</button>
+      <button class="vat-btn" id="vat100" onclick="setVat(100)">100%</button>
+    </div>
+  </div>
+  <div class="hint" id="vat-hint">50% odliczenia — pojazd używany też prywatnie (art. 86a ustawy o VAT)</div>
+
+  <hr class="divider">
+  <div class="panel-title">Struktura płatności</div>
+  <div class="bars" id="bars"></div>
+</div>
+</div>
+
+<div class="results" id="results"></div>
+</div>
+
+<p class="footnote">Kalkulacja orientacyjna — leasing operacyjny. Kwoty brutto zawierają VAT 23%. <b>WIBOR 1M na 03.06.2026: 3,81%</b> (źródło: totalmoney.pl / bank-wbs.pl). Domyślna stopa = 3,81% + marża ~1,7% = 5,5%. Ceny wg porsche.pl/cennik + chceauto.pl/otomoto.pl (Macan GTS 480 tys., Cayenne Electric od 446 tys.). Odliczenie VAT wg art. 86a ustawy o VAT: 50% — pojazd mieszany; 100% — pojazd wyłącznie firmowy (wymaga ewidencji przebiegu). Warunek: wpłata% + wykup% ≤ 100% wartości netto. Rzeczywiste warunki u leasingodawcy mogą się różnić. Plik działa offline.</p>
+</div>
+
+<script>
+// ========== DATA ==========
+// Dane ładowane z data/data.json (aktualizowanego codziennie przez GitHub Actions)
+let BRANDS = null;  // zostanie ustawione po załadowaniu JSON
+
+
+// ── Dane wbudowane (fallback gdy brak sieci lub data.json nie istnieje) ─────
+const FALLBACK_PRICES = {
+  '911': [
+    {name:'911 Carrera',          price:681000},
+    {name:'911 Carrera Cab.',     price:749000},
+    {name:'911 Carrera T',        price:734000},
+    {name:'911 Carrera T Cab.',   price:795000},
+    {name:'911 Carrera S',        price:773000},
+    {name:'911 Carrera S Cab.',   price:841000},
+    {name:'911 Carrera 4',        price:736000},
+    {name:'911 Carrera 4 Cab.',   price:804000},
+    {name:'911 Carrera 4S',       price:826000},
+    {name:'911 Carrera 4S Cab.',  price:894000},
+    {name:'911 Targa 4',          price:808000},
+    {name:'911 Targa 4S',         price:898000},
+    {name:'911 Carrera GTS',      price:895000},
+    {name:'911 Carrera 4 GTS',    price:949000},
+    {name:'911 Targa 4 GTS',      price:974000},
+    {name:'911 GT3',              price:946000},
+    {name:'911 GT3 Touring',      price:946000},
+    {name:'911 GT3 RS',           price:1246000},
+    {name:'911 Turbo S',          price:1299000},
+    {name:'911 Turbo S Cab.',     price:1369000},
+    {name:'911 Turbo 50 Years',   price:1387000},
+  ],
+  '718': [
+    {name:'718 Cayman GT4 RS',    price:823000},
+    {name:'718 Spyder RS',        price:823000},
+  ],
+  'Cayenne': [
+    {name:'Cayenne',              price:478000},
+    {name:'Cayenne Coupe',        price:516000},
+    {name:'Cayenne S',            price:572000},
+    {name:'Cayenne S Coupe',      price:611000},
+    {name:'Cayenne E-Hybrid',     price:562000},
+    {name:'Cayenne E-Hyb. Coupe', price:598000},
+    {name:'Cayenne Turbo E-Hyb.', price:807000},
+    {name:'Cayenne Turbo GT',     price:889000},
+  ],
+  'Cayenne EV': [
+    {name:'Cayenne Electric',          price:446000},
+    {name:'Cayenne S Electric',        price:557000},
+    {name:'Cayenne Turbo Electric',    price:727000},
+    {name:'Cayenne Coupé Electric',    price:463000},
+    {name:'Cayenne S Coupé Electric',  price:570000},
+    {name:'Cayenne Turbo Coupé Elec.',price:740000},
+  ],
+  'Panamera': [
+    {name:'Panamera',              price:513000},
+    {name:'Panamera 4',            price:563000},
+    {name:'Panamera 4S',           price:656000},
+    {name:'Panamera 4 E-Hybrid',   price:620000},
+    {name:'Panamera 4S E-Hyb.',    price:730000},
+    {name:'Panamera Turbo E-Hyb.', price:912000},
+    {name:'Panamera Executive',    price:657000},
+    {name:'Pan. 4 Executive',      price:707000},
+    {name:'Pan. Turbo E-Hyb. Exec.',price:962000},
+  ],
+  'Taycan': [
+    {name:'Taycan',                price:489000},
+    {name:'Taycan 4',              price:513000},
+    {name:'Taycan 4S',             price:620000},
+    {name:'Taycan GTS',            price:700000},
+    {name:'Taycan Turbo',          price:750000},
+    {name:'Taycan Turbo S',        price:894000},
+    {name:'Taycan Sport Turismo',  price:489000},
+    {name:'Taycan 4 ST',           price:513000},
+    {name:'Taycan 4S ST',          price:620000},
+    {name:'Taycan GTS ST',         price:720000},
+    {name:'Taycan Turbo ST',       price:760000},
+    {name:'Taycan Turbo S ST',     price:974000},
+    {name:'Taycan Cross Turismo',  price:563000},
+    {name:'Taycan 4 CT',           price:601000},
+    {name:'Taycan 4S CT',          price:680000},
+    {name:'Taycan Turbo CT',       price:800000},
+    {name:'Taycan Turbo S CT',     price:974000},
+  ],
+  'Macan': [
+    {name:'Macan',                 price:298000},
+    {name:'Macan T',               price:342000},
+    {name:'Macan S',               price:357000},
+    {name:'Macan GTS (benzyna)',   price:411000},
+    {name:'Macan EV',              price:370000},
+    {name:'Macan 4 EV',            price:413000},
+    {name:'Macan 4S EV',           price:490000},
+    {name:'Macan GTS EV',          price:480000},
+    {name:'Macan Turbo EV',        price:521000},
+  ],
+};
+
+async function loadData() {
+  const statusEl = document.getElementById('loading-status');
+  try {
+    // Dodajemy timestamp żeby uniknąć cache przeglądarki
+    const resp = await fetch('data/data.json?v=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+
+    // Aktualizuj WIBOR w nagłówku
+    if (data.wibor) {
+      document.getElementById('wibor-val').textContent =
+        data.wibor.toFixed(2).replace('.', ',') + '%';
+      document.getElementById('wibor-date').textContent = data.wibor_date || '';
+      // Ustaw domyślną stopę = WIBOR + 1.7% marży
+      const suggested = Math.round((data.wibor + 1.7) * 10) / 10;
+      document.getElementById('rate').value = Math.min(suggested, 10);
+    }
+    if (data.updated_at) {
+      document.getElementById('data-updated').textContent =
+        data.updated_at.slice(0, 10);
+    }
+
+    // Użyj cen z JSON jeśli dostępne, wpp fallback wbudowany
+    const prices = (data.prices && Object.keys(data.prices).length > 0)
+      ? data.prices
+      : FALLBACK_PRICES;
+
+    BRANDS = {
+      porsche: {
+        accent: '#c9a84c', accent2: '#e8c97a',
+        accentDim: 'rgba(201,168,76,0.12)', accentBorder: 'rgba(201,168,76,0.3)',
+        categories: prices
+      }
+    };
+
+    if (statusEl) statusEl.remove();
+    initApp();
+
+  } catch (err) {
+    console.warn('Nie udało się załadować data.json, używam danych wbudowanych:', err);
+    // Fallback: użyj cen zahardkodowanych
+    BRANDS = {
+      porsche: {
+        accent: '#c9a84c', accent2: '#e8c97a',
+        accentDim: 'rgba(201,168,76,0.12)', accentBorder: 'rgba(201,168,76,0.3)',
+        categories: FALLBACK_PRICES
+      }
+    };
+    document.getElementById('wibor-val').textContent = '3,81%';
+    document.getElementById('wibor-date').textContent = '(offline)';
+    document.getElementById('data-updated').textContent = 'offline';
+    if (statusEl) statusEl.remove();
+    initApp();
+  }
+}
+
+// ========== STATE ==========
+let currentBrand = 'porsche';
+let currentCat   = null;
+let currentIdx   = 0;
+let vatPct       = 50; // 0, 50, 100
+
+function pl(n){ return Math.round(n).toLocaleString('pl-PL')+' zł'; }
+function plk(n){ return Math.round(n/1000)+' tys. zł'; }
+
+// ========== BRAND SWITCH ==========
+
+
+function renderCatTabs() {
+  const cats = Object.keys(BRANDS[currentBrand].categories);
+  document.getElementById('cat-tabs').innerHTML = cats.map(c=>
+    `<button class="cat-tab ${c===currentCat?'active':''}" onclick="switchCat('${c}')">${c}</button>`
+  ).join('');
+}
+
+function switchCat(cat) {
+  currentCat = cat; currentIdx = 0;
+  document.querySelectorAll('.cat-tab').forEach(t=>t.className='cat-tab'+(t.textContent===cat?' active':''));
+  renderModels();
+  const first = BRANDS[currentBrand].categories[cat][0];
+  if(first) document.getElementById('price').value = first.price;
+  calc();
+}
+
+function renderModels() {
+  const models = BRANDS[currentBrand].categories[currentCat];
+  document.getElementById('models').innerHTML = models.map((m,i)=>
+    `<div class="model-btn ${i===currentIdx?'active':''}" onclick="selectModel(${i})">
+      <span class="mn">${m.name}</span>
+      <span class="mp">od ${plk(m.price)}</span>
+    </div>`
+  ).join('');
+}
+
+function selectModel(i) {
+  currentIdx = i;
+  const m = BRANDS[currentBrand].categories[currentCat][i];
+  document.getElementById('price').value = m.price;
+  document.querySelectorAll('.model-btn').forEach((b,j)=>b.className='model-btn'+(j===i?' active':''));
+  calc();
+}
+
+// ========== VAT ==========
+function setVat(pct) {
+  vatPct = pct;
+  ['vat0','vat50','vat100'].forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('vat'+pct).classList.add('active');
+  const hints = {
+    0: 'Brak odliczenia VAT — pojazd prywatny lub brak rejestracji VAT',
+    50: '50% odliczenia — pojazd używany też prywatnie (art. 86a ustawy o VAT)',
+    100: '100% odliczenia — pojazd wyłącznie firmowy z ewidencją przebiegu (VAT-26)'
+  };
+  document.getElementById('vat-hint').textContent = hints[pct];
+  calc();
+}
+
+// ========== CALC ==========
+function calc() {
+  const priceBrutto  = +document.getElementById('price').value;
+  const priceNetto   = priceBrutto / 1.23;
+  const depBrutto    = +document.getElementById('deposit').value;
+  const depNetto     = depBrutto / 1.23;
+  const n            = +document.getElementById('months').value;
+  const buyoutPct    = +document.getElementById('buyout').value / 100;
+  const annualRate   = +document.getElementById('rate').value / 100;
+  const monthlyRate  = annualRate / 12;
+
+  // constraint
+  const depPctN  = depNetto / priceNetto;
+  const sumPct   = depPctN + buyoutPct;
+  const warnEl   = document.getElementById('warn');
+  if(sumPct > 1.001) {
+    warnEl.textContent = `⚠ Wpłata (${Math.round(depPctN*100)}%) + wykup (${Math.round(buyoutPct*100)}%) = ${Math.round(sumPct*100)}% > 100% — zmniejsz wykup lub wpłatę`;
+  } else { warnEl.textContent = ''; }
+
+  const buyoutNetto   = priceNetto * buyoutPct;
+  const buyoutBrutto  = buyoutNetto * 1.23;
+  const financedNetto = priceNetto - depNetto;
+  const financedBrutto= priceBrutto - depBrutto;
+  const factor        = Math.pow(1 + monthlyRate, n);
+  let pmtNetto = 0;
+  if(financedNetto > 0 && monthlyRate > 0) {
+    pmtNetto = (financedNetto - buyoutNetto / factor) * (monthlyRate * factor) / (factor - 1);
+  }
+  const pmtBrutto    = pmtNetto * 1.23;
+
+  const totalNetto   = depNetto + pmtNetto * n + buyoutNetto;
+  const totalBrutto  = depBrutto + pmtBrutto * n + buyoutBrutto;
+  const costBrutto   = totalBrutto - priceBrutto;
+  const costNetto    = totalNetto - priceNetto;
+
+  // VAT savings
+  // VAT contained in: deposit, monthly payments (23% on netto), buyout
+  const vatInDep     = depBrutto - depNetto;
+  const vatInPmt     = (pmtBrutto - pmtNetto) * n;
+  const vatInBuyout  = buyoutBrutto - buyoutNetto;
+  const totalVatPaid = vatInDep + vatInPmt + vatInBuyout;
+  const vatSaving    = totalVatPaid * (vatPct / 100);
+  const effectiveCost= totalBrutto - vatSaving;
+  const depPctDisplay= Math.round(depBrutto / priceBrutto * 100);
+
+  // price slider range
+  const models = BRANDS[currentBrand].categories[currentCat];
+  const minP = Math.max(50000, Math.min(...models.map(m=>m.price))*0.7);
+  const maxP = Math.min(2000000, Math.max(...models.map(m=>m.price))*1.5);
+  const ps = document.getElementById('price');
+  ps.min = Math.round(minP); ps.max = Math.round(maxP);
+  document.getElementById('price-min-lbl').textContent = plk(minP);
+  document.getElementById('price-max-lbl').textContent = plk(maxP);
+
+  // labels
+  document.getElementById('v-price-b').textContent = pl(priceBrutto);
+  document.getElementById('v-price-n').textContent = `(${pl(Math.round(priceNetto))} netto)`;
+  document.getElementById('v-dep-b').textContent   = pl(depBrutto)+` (${depPctDisplay}%)`;
+  document.getElementById('v-dep-n').textContent   = `(${pl(Math.round(depNetto))} netto)`;
+  document.getElementById('v-months').textContent  = n+' mies.';
+  document.getElementById('v-buyout-b').textContent= document.getElementById('buyout').value+'% = '+pl(Math.round(buyoutBrutto));
+  document.getElementById('v-buyout-n').textContent= `(${pl(Math.round(buyoutNetto))} netto)`;
+  document.getElementById('v-rate').textContent    = (+document.getElementById('rate').value).toFixed(1).replace('.',',')+' %';
+
+  // VAT row per rata
+  const vatSavingPerMonth = (pmtBrutto - pmtNetto) * (vatPct/100);
+  const pmtEffective      = pmtBrutto - vatSavingPerMonth;
+
+  // results
+  document.getElementById('results').innerHTML = `
+    <div class="result-card main">
+      <div class="rc-label">Rata miesięczna</div>
+      <div class="rc-big">
+        <span class="rc-brutto">${pl(pmtBrutto)}</span>
+        <span class="rc-netto-line">(${pl(pmtNetto)} netto)</span>
+        ${vatPct>0 ? `<span class="rc-netto-line" style="color:#6ed49a">→ efektywna po odliczeniu VAT: ${pl(pmtEffective)}</span>` : ''}
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="result-row">
+        <span class="rr-label">Cena katalogowa</span>
+        <div class="rr-values"><span class="rr-brutto">${pl(priceBrutto)}</span><span class="rr-netto">(${pl(Math.round(priceNetto))} netto)</span></div>
+      </div>
+      <div class="result-row">
+        <span class="rr-label">Wpłata własna</span>
+        <div class="rr-values"><span class="rr-brutto">${pl(depBrutto)}</span><span class="rr-netto">(${pl(Math.round(depNetto))} netto)</span></div>
+      </div>
+      <div class="result-row">
+        <span class="rr-label">Kwota finansowana</span>
+        <div class="rr-values"><span class="rr-brutto">${pl(Math.round(financedBrutto))}</span><span class="rr-netto">(${pl(Math.round(financedNetto))} netto)</span></div>
+      </div>
+      <div class="result-row">
+        <span class="rr-label">Wykup końcowy</span>
+        <div class="rr-values"><span class="rr-brutto">${pl(Math.round(buyoutBrutto))}</span><span class="rr-netto">(${pl(Math.round(buyoutNetto))} netto)</span></div>
+      </div>
+      <div class="result-row">
+        <span class="rr-label">Koszt finansowania</span>
+        <div class="rr-values"><span class="rr-brutto">${pl(Math.round(costBrutto))}</span><span class="rr-netto">(${pl(Math.round(costNetto))} netto)</span></div>
+      </div>
+    </div>
+
+    <div class="result-card subtotal">
+      <div class="rc-label">Raty + wpłata (bez wykupu)</div>
+      <div class="rc-big">
+        <span class="rc-brutto">${pl(Math.round(depBrutto + pmtBrutto*n))}</span>
+        <span class="rc-netto-line">(${pl(Math.round(depNetto + pmtNetto*n))} netto)</span>
+      </div>
+    </div>
+
+    <div class="result-card total">
+      <div class="rc-label">Do spłaty łącznie (z wykupem)</div>
+      <div class="rc-big">
+        <span class="rc-brutto">${pl(Math.round(totalBrutto))}</span>
+        <span class="rc-netto-line">(${pl(Math.round(totalNetto))} netto)</span>
+      </div>
+    </div>
+
+    ${vatPct > 0 ? `
+    <div class="result-card vat-saving">
+      <div class="rc-label">Oszczędność VAT (${vatPct}% odliczenia)</div>
+      <div class="rc-big">
+        <span class="rc-brutto" style="color:#6ed49a;font-size:20px;">− ${pl(Math.round(vatSaving))}</span>
+        <span class="rc-netto-line" style="color:#4caf7d;">efektywny koszt całkowity: ${pl(Math.round(effectiveCost))}</span>
+        <span class="rc-netto-line" style="color:#4caf7d;font-size:10px;">efekt. raty + wpłata (bez wykupu): ${pl(Math.round(depBrutto + pmtBrutto*n - (vatInDep + vatInPmt)*(vatPct/100)))}</span>
+      </div>
+      <div style="margin-top:10px">
+        <div class="result-row">
+          <span class="rr-label">VAT od wpłaty</span>
+          <div class="rr-values"><span class="rr-brutto">${pl(Math.round(vatInDep))}</span><span class="rr-green">−${pl(Math.round(vatInDep*(vatPct/100)))} zwrot</span></div>
+        </div>
+        <div class="result-row">
+          <span class="rr-label">VAT od rat (${n}×)</span>
+          <div class="rr-values"><span class="rr-brutto">${pl(Math.round(vatInPmt))}</span><span class="rr-green">−${pl(Math.round(vatInPmt*(vatPct/100)))} zwrot</span></div>
+        </div>
+        <div class="result-row">
+          <span class="rr-label">VAT od wykupu</span>
+          <div class="rr-values"><span class="rr-brutto">${pl(Math.round(vatInBuyout))}</span><span class="rr-green">−${pl(Math.round(vatInBuyout*(vatPct/100)))} zwrot</span></div>
+        </div>
+      </div>
+    </div>
+    ` : `<div class="result-card" style="opacity:0.5"><div class="rc-label">Oszczędność VAT</div><div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;">Wybierz odliczenie 50% lub 100% powyżej</div></div>`}
+  `;
+
+  // Bars
+  const totalB = depBrutto + pmtBrutto*n + buyoutBrutto;
+  const acc = BRANDS[currentBrand].accent;
+  const bars = [
+    {label:'Wpłata',      color:acc,        brutto:depBrutto,    netto:depNetto},
+    {label:n+' rat',      color:'#4caf7d',  brutto:pmtBrutto*n,  netto:pmtNetto*n},
+    {label:'Wykup',       color:'#e0a040',  brutto:buyoutBrutto, netto:buyoutNetto},
+  ];
+  document.getElementById('bars').innerHTML = bars.map(b=>`
+    <div class="bar-row">
+      <div class="bar-dot" style="background:${b.color}"></div>
+      <span class="bar-name">${b.label}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${totalB>0?Math.round(b.brutto/totalB*100):0}%;background:${b.color}"></div></div>
+      <div class="bar-amounts">
+        <span class="bar-brutto">${pl(Math.round(b.brutto))}</span>
+        <span class="bar-netto">(${pl(Math.round(b.netto))} netto)</span>
+      </div>
+    </div>
+  `).join('')+`
+    <div class="bar-total-line">
+      <span class="btl">Łącznie brutto (z wykupem)</span>
+      <div class="btv-wrap">
+        <span class="btv-brutto">${pl(Math.round(totalBrutto))}</span>
+        <span class="btv-netto">(${pl(Math.round(totalNetto))} netto)</span>
+      </div>
+    </div>
+  `;
+}
+
+// ========== INIT ==========
+function initApp() {
+  currentCat = Object.keys(BRANDS.porsche.categories)[0];
+  renderCatTabs();
+  renderModels();
+  const first = BRANDS.porsche.categories[currentCat][0];
+  if (first) document.getElementById('price').value = first.price;
+  calc();
+  ['price','deposit','months','buyout','rate'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calc);
+  });
+}
+
+// Załaduj dane z JSON i uruchom aplikację
+loadData();
+</script>
+</body>
+</html>
