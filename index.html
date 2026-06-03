@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalkulator leasingu — Porsche</title>
+<title>Kalkulator leasingu Porsche — cennik 2025/2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -156,13 +156,12 @@ input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%
     <h1><em>Porsche</em> — Kalkulator leasingu 2026</h1>
   </div>
   <div>
-    <div class="wibor-badge"><div class="wibor-dot"></div>WIBOR 1M: <span id="wibor-val">…</span> · <span id="wibor-date">…</span></div>
-    <div class="header-note">Ceny katalogowe brutto (VAT 23%)<br>Dane aktualne na: <span id="data-updated">…</span></div>
+    <div class="wibor-badge"><div class="wibor-dot"></div>WIBOR 1M: 3,81% · 03.06.2026</div>
+    <div class="header-note">Ceny katalogowe brutto (VAT 23%)</div>
   </div>
 </header>
 
 
-<div id="loading-status" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:12px;">⟳ Ładowanie aktualnych danych…</div>
 <div class="cat-tabs" id="cat-tabs"></div>
 <div class="model-grid" id="models"></div>
 
@@ -218,8 +217,8 @@ input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%
       <span class="slider-label">Stopa finansowania (rocznie)</span>
       <span class="sv-plain" id="v-rate"></span>
     </div>
-    <input type="range" id="rate" min="3.0" max="10.0" value="5.5" step="0.1">
-    <div class="slider-track-labels"><span>3,0%</span><span>10,0%</span></div>
+    <input type="range" id="rate" min="0.0" max="10.0" value="5.5" step="0.1">
+    <div class="slider-track-labels"><span>0,0%</span><span>10,0%</span></div>
     <div class="hint">WIBOR 1M 3,81% + marża ~1,7% → sugerowane 5,5%</div>
   </div>
 
@@ -245,164 +244,121 @@ input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%
 <div class="results" id="results"></div>
 </div>
 
-<p class="footnote">Kalkulacja orientacyjna — leasing operacyjny. Kwoty brutto zawierają VAT 23%. <b>WIBOR 1M na 03.06.2026: 3,81%</b> (źródło: totalmoney.pl / bank-wbs.pl). Domyślna stopa = 3,81% + marża ~1,7% = 5,5%. Ceny wg porsche.pl/cennik + chceauto.pl/otomoto.pl (Macan GTS 480 tys., Cayenne Electric od 446 tys.). Odliczenie VAT wg art. 86a ustawy o VAT: 50% — pojazd mieszany; 100% — pojazd wyłącznie firmowy (wymaga ewidencji przebiegu). Warunek: wpłata% + wykup% ≤ 100% wartości netto. Rzeczywiste warunki u leasingodawcy mogą się różnić. Plik działa offline.</p>
+<p class="footnote">Kalkulacja orientacyjna — leasing operacyjny. Kwoty brutto zawierają VAT 23%. <b>WIBOR 1M na 03.06.2026: 3,81%</b> (źródło: totalmoney.pl / bank-wbs.pl). Domyślna stopa = 3,81% + marża ~1,7% = 5,5%. Ceny wg oficjalnego cennika Porsche Polska (brutto z VAT 23%) — aktualizacja 03.06.2026. WIBOR pobierany automatycznie codziennie.porsche.com (aktualizacja 03.06.2026). Cayenne Electric wg porsche.pl/cennik. Odliczenie VAT wg art. 86a ustawy o VAT: 50% — pojazd mieszany; 100% — pojazd wyłącznie firmowy (wymaga ewidencji przebiegu). Warunek: wpłata% + wykup% ≤ 100% wartości netto. Rzeczywiste warunki u leasingodawcy mogą się różnić. Plik działa offline.</p>
 </div>
 
 <script>
 // ========== DATA ==========
-// Dane ładowane z data/data.json (aktualizowanego codziennie przez GitHub Actions)
-let BRANDS = null;  // zostanie ustawione po załadowaniu JSON
-
-
-// ── Dane wbudowane (fallback gdy brak sieci lub data.json nie istnieje) ─────
-const FALLBACK_PRICES = {
-  '911': [
-    {name:'911 Carrera',          price:681000},
-    {name:'911 Carrera Cab.',     price:749000},
-    {name:'911 Carrera T',        price:734000},
-    {name:'911 Carrera T Cab.',   price:795000},
-    {name:'911 Carrera S',        price:773000},
-    {name:'911 Carrera S Cab.',   price:841000},
-    {name:'911 Carrera 4',        price:736000},
-    {name:'911 Carrera 4 Cab.',   price:804000},
-    {name:'911 Carrera 4S',       price:826000},
-    {name:'911 Carrera 4S Cab.',  price:894000},
-    {name:'911 Targa 4',          price:808000},
-    {name:'911 Targa 4S',         price:898000},
-    {name:'911 Carrera GTS',      price:895000},
-    {name:'911 Carrera 4 GTS',    price:949000},
-    {name:'911 Targa 4 GTS',      price:974000},
-    {name:'911 GT3',              price:946000},
-    {name:'911 GT3 Touring',      price:946000},
-    {name:'911 GT3 RS',           price:1246000},
-    {name:'911 Turbo S',          price:1299000},
-    {name:'911 Turbo S Cab.',     price:1369000},
-    {name:'911 Turbo 50 Years',   price:1387000},
-  ],
-  '718': [
-    {name:'718 Cayman GT4 RS',    price:823000},
-    {name:'718 Spyder RS',        price:823000},
-  ],
-  'Cayenne': [
-    {name:'Cayenne',              price:478000},
-    {name:'Cayenne Coupe',        price:516000},
-    {name:'Cayenne S',            price:572000},
-    {name:'Cayenne S Coupe',      price:611000},
-    {name:'Cayenne E-Hybrid',     price:562000},
-    {name:'Cayenne E-Hyb. Coupe', price:598000},
-    {name:'Cayenne Turbo E-Hyb.', price:807000},
-    {name:'Cayenne Turbo GT',     price:889000},
-  ],
-  'Cayenne EV': [
-    {name:'Cayenne Electric',          price:446000},
-    {name:'Cayenne S Electric',        price:557000},
-    {name:'Cayenne Turbo Electric',    price:727000},
-    {name:'Cayenne Coupé Electric',    price:463000},
-    {name:'Cayenne S Coupé Electric',  price:570000},
-    {name:'Cayenne Turbo Coupé Elec.',price:740000},
-  ],
-  'Panamera': [
-    {name:'Panamera',              price:513000},
-    {name:'Panamera 4',            price:563000},
-    {name:'Panamera 4S',           price:656000},
-    {name:'Panamera 4 E-Hybrid',   price:620000},
-    {name:'Panamera 4S E-Hyb.',    price:730000},
-    {name:'Panamera Turbo E-Hyb.', price:912000},
-    {name:'Panamera Executive',    price:657000},
-    {name:'Pan. 4 Executive',      price:707000},
-    {name:'Pan. Turbo E-Hyb. Exec.',price:962000},
-  ],
-  'Taycan': [
-    {name:'Taycan',                price:489000},
-    {name:'Taycan 4',              price:513000},
-    {name:'Taycan 4S',             price:620000},
-    {name:'Taycan GTS',            price:700000},
-    {name:'Taycan Turbo',          price:750000},
-    {name:'Taycan Turbo S',        price:894000},
-    {name:'Taycan Sport Turismo',  price:489000},
-    {name:'Taycan 4 ST',           price:513000},
-    {name:'Taycan 4S ST',          price:620000},
-    {name:'Taycan GTS ST',         price:720000},
-    {name:'Taycan Turbo ST',       price:760000},
-    {name:'Taycan Turbo S ST',     price:974000},
-    {name:'Taycan Cross Turismo',  price:563000},
-    {name:'Taycan 4 CT',           price:601000},
-    {name:'Taycan 4S CT',          price:680000},
-    {name:'Taycan Turbo CT',       price:800000},
-    {name:'Taycan Turbo S CT',     price:974000},
-  ],
-  'Macan': [
-    {name:'Macan',                 price:298000},
-    {name:'Macan T',               price:342000},
-    {name:'Macan S',               price:357000},
-    {name:'Macan GTS (benzyna)',   price:411000},
-    {name:'Macan EV',              price:370000},
-    {name:'Macan 4 EV',            price:413000},
-    {name:'Macan 4S EV',           price:490000},
-    {name:'Macan GTS EV',          price:480000},
-    {name:'Macan Turbo EV',        price:521000},
-  ],
-};
-
-async function loadData() {
-  const statusEl = document.getElementById('loading-status');
-  try {
-    // Dodajemy timestamp żeby uniknąć cache przeglądarki
-    const resp = await fetch('data/data.json?v=' + Date.now());
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-
-    // Aktualizuj WIBOR w nagłówku
-    if (data.wibor) {
-      document.getElementById('wibor-val').textContent =
-        data.wibor.toFixed(2).replace('.', ',') + '%';
-      document.getElementById('wibor-date').textContent = data.wibor_date || '';
-      // Ustaw domyślną stopę = WIBOR + 1.7% marży
-      const suggested = Math.round((data.wibor + 1.7) * 10) / 10;
-      document.getElementById('rate').value = Math.min(suggested, 10);
+// Ceny wg oficjalnego cennika Porsche Polska (brutto z VAT 23%) — aktualizacja 03.06.2026
+const BRANDS = {
+  porsche: {
+    accent:'#c9a84c', accent2:'#e8c97a', accentDim:'rgba(201,168,76,0.12)', accentBorder:'rgba(201,168,76,0.3)',
+    categories: {
+      '718': [
+        {name:'718 Cayman GT4 RS',                      price:823000},
+        {name:'718 Spyder RS',                          price:823000},
+      ],
+      '911': [
+        {name:'911 Carrera',                            price:681000},
+        {name:'911 Carrera Cabriolet',                  price:749000},
+        {name:'911 Carrera T',                          price:734000},
+        {name:'911 Carrera T Cabriolet',                price:802000},
+        {name:'911 Carrera S',                          price:771000},
+        {name:'911 Carrera S Cabriolet',                price:839000},
+        {name:'911 Carrera 4S',                         price:811000},
+        {name:'911 Carrera 4S Cabriolet',               price:879000},
+        {name:'911 Targa 4S',                           price:888000},
+        {name:'911 Carrera GTS',                        price:880000},
+        {name:'911 Carrera GTS Cabriolet',              price:948000},
+        {name:'911 Carrera 4 GTS',                      price:919000},
+        {name:'911 Carrera 4 GTS Cabriolet',            price:987000},
+        {name:'911 Targa 4 GTS',                        price:987000},
+        {name:'911 Turbo S',                            price:1373000},
+        {name:'911 Turbo S Cabriolet',                  price:1442000},
+        {name:'911 GT3',                                price:1107000},
+        {name:'911 GT3 Touring',                        price:1107000},
+        {name:'911 GT3 S/C',                            price:1433000},
+        {name:'911 GT3 RS',                             price:1331000},
+        {name:'911 Spirit 70',                          price:1203000},
+      ],
+      'Cayenne': [
+        {name:'Cayenne',                                price:479000},
+        {name:'Cayenne Black Edition',                  price:548000},
+        {name:'Cayenne E-Hybrid',                       price:511000},
+        {name:'Cayenne E-Hybrid Black Edition',         price:572000},
+        {name:'Cayenne S',                              price:589000},
+        {name:'Cayenne S E-Hybrid',                     price:580000},
+        {name:'Cayenne S E-Hybrid Black Edition',       price:644000},
+        {name:'Cayenne GTS',                            price:697000},
+        {name:'Cayenne Turbo E-Hybrid',                 price:914000},
+        {name:'Cayenne Coupé',                          price:497000},
+        {name:'Cayenne Coupé Black Edition',            price:557000},
+        {name:'Cayenne E-Hybrid Coupé',                 price:522000},
+        {name:'Cayenne E-Hybrid Coupé Black Ed.',       price:578000},
+        {name:'Cayenne S Coupé',                        price:614000},
+        {name:'Cayenne S E-Hybrid Coupé',               price:605000},
+        {name:'Cayenne S E-Hybrid Coupé Black Ed.',     price:659000},
+        {name:'Cayenne GTS Coupé',                      price:713000},
+        {name:'Cayenne Turbo E-Hybrid Coupé',           price:932000},
+        {name:'Cayenne Turbo E-Hybrid Coupé GT',        price:1060000},
+      ],
+      'Cayenne EV': [
+        {name:'Cayenne Electric',                       price:446000},
+        {name:'Cayenne S Electric',                     price:552000},
+        {name:'Cayenne Turbo Electric',                 price:727000},
+        {name:'Cayenne Coupé Electric',                 price:463000},
+        {name:'Cayenne S Coupé Electric',               price:570000},
+        {name:'Cayenne Turbo Coupé Electric',           price:740000},
+      ],
+      'Panamera': [
+        {name:'Panamera',                               price:563000},
+        {name:'Panamera 4',                             price:582000},
+        {name:'Panamera 4 E-Hybrid',                    price:578000},
+        {name:'Panamera 4 E-Hybrid Executive',          price:622000},
+        {name:'Panamera 4S E-Hybrid',                   price:651000},
+        {name:'Panamera GTS',                           price:808000},
+        {name:'Panamera Turbo E-Hybrid',                price:1016000},
+        {name:'Panamera Turbo S E-Hybrid',              price:1174000},
+        {name:'Panamera Turbo S E-Hybrid Executive',    price:1227000},
+      ],
+      'Macan': [
+        {name:'Macan',                                  price:370000},
+        {name:'Macan 4',                                price:387000},
+        {name:'Macan 4S',                               price:417000},
+        {name:'Macan GTS',                              price:480000},
+        {name:'Macan Turbo',                            price:529000},
+      ],
+      'Taycan': [
+        {name:'Taycan',                                 price:474000},
+        {name:'Taycan Black Edition',                   price:555000},
+        {name:'Taycan 4',                               price:495000},
+        {name:'Taycan 4 Black Edition',                 price:576000},
+        {name:'Taycan 4S',                              price:562000},
+        {name:'Taycan 4S Black Edition',                price:634000},
+        {name:'Taycan GTS',                             price:687000},
+        {name:'Taycan Turbo',                           price:815000},
+        {name:'Taycan Turbo S',                         price:973000},
+        {name:'Taycan Sport Turismo',                   price:479000},
+        {name:'Taycan Sport Turismo Black Edition',     price:560000},
+        {name:'Taycan 4S Sport Turismo',                price:567000},
+        {name:'Taycan 4S Sport Turismo Black Ed.',      price:639000},
+        {name:'Taycan GTS Sport Turismo',               price:692000},
+        {name:'Taycan Turbo Sport Turismo',             price:820000},
+        {name:'Taycan Turbo S Sport Turismo',           price:978000},
+        {name:'Taycan 4 Cross Turismo',                 price:526000},
+        {name:'Taycan 4S Cross Turismo',                price:587000},
+        {name:'Taycan Turbo Cross Turismo',             price:821000},
+        {name:'Taycan Turbo S Cross Turismo',           price:970000},
+        {name:'Taycan Turbo GT',                        price:1113000},
+        {name:'Taycan Turbo GT Weissach',               price:1114000},
+      ],
     }
-    if (data.updated_at) {
-      document.getElementById('data-updated').textContent =
-        data.updated_at.slice(0, 10);
-    }
-
-    // Użyj cen z JSON jeśli dostępne, wpp fallback wbudowany
-    const prices = (data.prices && Object.keys(data.prices).length > 0)
-      ? data.prices
-      : FALLBACK_PRICES;
-
-    BRANDS = {
-      porsche: {
-        accent: '#c9a84c', accent2: '#e8c97a',
-        accentDim: 'rgba(201,168,76,0.12)', accentBorder: 'rgba(201,168,76,0.3)',
-        categories: prices
-      }
-    };
-
-    if (statusEl) statusEl.remove();
-    initApp();
-
-  } catch (err) {
-    console.warn('Nie udało się załadować data.json, używam danych wbudowanych:', err);
-    // Fallback: użyj cen zahardkodowanych
-    BRANDS = {
-      porsche: {
-        accent: '#c9a84c', accent2: '#e8c97a',
-        accentDim: 'rgba(201,168,76,0.12)', accentBorder: 'rgba(201,168,76,0.3)',
-        categories: FALLBACK_PRICES
-      }
-    };
-    document.getElementById('wibor-val').textContent = '3,81%';
-    document.getElementById('wibor-date').textContent = '(offline)';
-    document.getElementById('data-updated').textContent = 'offline';
-    if (statusEl) statusEl.remove();
-    initApp();
   }
-}
+};
 
 // ========== STATE ==========
 let currentBrand = 'porsche';
-let currentCat   = null;
+let currentCat   = '911';
 let currentIdx   = 0;
 let vatPct       = 50; // 0, 50, 100
 
@@ -485,8 +441,13 @@ function calc() {
   const financedBrutto= priceBrutto - depBrutto;
   const factor        = Math.pow(1 + monthlyRate, n);
   let pmtNetto = 0;
-  if(financedNetto > 0 && monthlyRate > 0) {
-    pmtNetto = (financedNetto - buyoutNetto / factor) * (monthlyRate * factor) / (factor - 1);
+  if(financedNetto > 0) {
+    if(monthlyRate > 0) {
+      pmtNetto = (financedNetto - buyoutNetto / factor) * (monthlyRate * factor) / (factor - 1);
+    } else {
+      // 0% stopa — prosta rata bez odsetek
+      pmtNetto = (financedNetto - buyoutNetto) / n;
+    }
   }
   const pmtBrutto    = pmtNetto * 1.23;
 
@@ -634,20 +595,13 @@ function calc() {
 }
 
 // ========== INIT ==========
-function initApp() {
-  currentCat = Object.keys(BRANDS.porsche.categories)[0];
-  renderCatTabs();
-  renderModels();
-  const first = BRANDS.porsche.categories[currentCat][0];
-  if (first) document.getElementById('price').value = first.price;
-  calc();
-  ['price','deposit','months','buyout','rate'].forEach(id => {
-    document.getElementById(id).addEventListener('input', calc);
-  });
-}
-
-// Załaduj dane z JSON i uruchom aplikację
-loadData();
+renderCatTabs();
+renderModels();
+document.getElementById('price').value = BRANDS.porsche.categories['911'][0].price;
+calc();
+['price','deposit','months','buyout','rate'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', calc);
+});
 </script>
 </body>
 </html>
