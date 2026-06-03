@@ -1,0 +1,48 @@
+name: Aktualizacja danych (WIBOR + cennik)
+
+on:
+  schedule:
+    # Codziennie o 7:00 czasu polskiego (5:00 UTC)
+    - cron: "0 5 * * *"
+
+  # Możliwość ręcznego uruchomienia z panelu GitHub
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Pobierz kod z repozytorium
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # 2. Skonfiguruj Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 3. Zainstaluj zależności
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      # 4. Uruchom skrypt aktualizujący
+      - name: Uruchom update_data.py
+        env:
+          # Uzupełnij w Settings → Secrets and variables → Actions
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
+          SMTP_HOST:    ${{ secrets.SMTP_HOST }}
+          SMTP_PORT:    ${{ secrets.SMTP_PORT }}
+          SMTP_USER:    ${{ secrets.SMTP_USER }}
+          SMTP_PASS:    ${{ secrets.SMTP_PASS }}
+        run: python update_data.py
+
+      # 5. Jeśli data.json się zmienił — zapisz go z powrotem do repozytorium
+      - name: Zapisz zmiany do repo
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/data.json
+          git diff --cached --quiet || git commit -m "chore: aktualizacja danych $(date +%Y-%m-%d)"
+          git push
