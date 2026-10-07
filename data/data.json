@@ -1,1 +1,6 @@
-{"wibor":3.81,"wibor_date":"2026-06-03","prices":{},"updated_at":"2026-06-03T07:00:00"}
+{
+  "wibor": 3.76,
+  "wibor_date": "2026-10-07",
+  "updated_at": "2026-10-07T19:45:57",
+  "note": "WIBOR 1M pobierany automatycznie. Cennik w kalkulator.html (CATALOG)."
+}
