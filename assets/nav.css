@@ -1,0 +1,15 @@
+/* Top menu bar — shared by all pages */
+.topnav { position:sticky; top:0; z-index:50; background:rgba(14,14,15,0.86); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:0.5px solid rgba(255,255,255,0.13); }
+.topnav-inner { max-width:1060px; margin:0 auto; padding:0 20px; height:56px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.topnav-brand { font-family:'DM Serif Display',serif; font-size:18px; color:#f0ede8; text-decoration:none; letter-spacing:0.02em; white-space:nowrap; }
+.topnav-brand em { font-style:italic; color:#e8c97a; }
+.topnav-links { display:flex; gap:4px; list-style:none; }
+.topnav-links a { display:block; padding:7px 14px; border-radius:8px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.08em; text-transform:uppercase; color:#9c9890; text-decoration:none; border:0.5px solid transparent; transition:all 0.15s; }
+.topnav-links a:hover { color:#f0ede8; border-color:rgba(255,255,255,0.13); }
+.topnav-links a[aria-current="page"] { color:#e8c97a; border-color:#c9a84c; background:rgba(201,168,76,0.12); }
+.topnav-links a:focus-visible { outline:2px solid #c9a84c; outline-offset:2px; }
+@media(max-width:480px){
+  .topnav-inner { padding:0 12px; }
+  .topnav-brand { font-size:16px; }
+  .topnav-links a { padding:6px 9px; font-size:11px; letter-spacing:0.04em; }
+}
