@@ -184,8 +184,8 @@ var CATALOG = {
   ],
   'Cayenne': [], 'Cayenne EV': [], 'Panamera': [], 'Macan': [], 'Taycan': []
 };
-/* WIBOR: jeśli masz własne pobieranie stawki, ustaw tu wartość i datę */
-var WIBOR = { rate: 3.81, date: '03.06.2026', margin: 1.7 };
+/* WIBOR: wartość domyślna; nadpisywana z data/data.json (aktualizuje go GitHub Actions) */
+var WIBOR = { rate: 3.81, date: '2026-06-03', margin: 1.7 };
 
 var S = { family: '911', variant: 0, price: 681000, down: 136000, term: 36, buyout: 30, rate: 5.5, vat: 50 };
 var $ = function(id){ return document.getElementById(id); };
@@ -245,8 +245,21 @@ $('vat').addEventListener('click', function(e){ var b = e.target.closest('[data-
   $(k).addEventListener('input', function(){ S[k] = +this.value; calc(); });
 });
 
-set('wibor', 'WIBOR 1M: ' + WIBOR.rate.toFixed(2).replace('.', ',') + '% · ' + WIBOR.date);
-renderModels(); syncInputs(); calc();
+var rateTouched = false;
+$('rate').addEventListener('input', function(){ rateTouched = true; });
+function pl(n, d){ return n.toFixed(d).replace('.', ','); }
+function plDate(iso){ var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ''); return m ? m[3] + '.' + m[2] + '.' + m[1] : (iso || ''); }
+function showWibor(){
+  var sug = Math.round((WIBOR.rate + WIBOR.margin) * 10) / 10;
+  set('wibor', 'WIBOR 1M: ' + pl(WIBOR.rate, 2) + '% · ' + plDate(WIBOR.date));
+  set('o-hint', 'WIBOR 1M ' + pl(WIBOR.rate, 2) + '% + marża ~' + pl(WIBOR.margin, 1) + '% → sugerowane ' + pl(sug, 1) + '%');
+  if (!rateTouched) { S.rate = sug; syncInputs(); calc(); }
+}
+renderModels(); syncInputs(); calc(); showWibor();
+fetch('/data/data.json', { cache: 'no-store' })
+  .then(function(r){ return r.ok ? r.json() : null; })
+  .then(function(d){ if (d && typeof d.wibor === 'number') { WIBOR.rate = d.wibor; WIBOR.date = d.wibor_date || WIBOR.date; showWibor(); } })
+  .catch(function(){});
 </script>
 </body>
 </html>
